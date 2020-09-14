@@ -1,0 +1,330 @@
+From 5bc86c5f57404ac73cca699684335ecb3b020fd6 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=C3=93scar=20Fabi=C3=A1n=20Ram=C3=ADrez=20Gonz=C3=A1lez?=
+ <A01630024@itesm.mx>
+Date: Sun, 30 Aug 2020 23:23:34 -0500
+Subject: [PATCH] A01630024-homework-02
+
+---
+ labs/02/Makefile      |  10 ++
+ labs/02/my_compiler.c | 291 ++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 301 insertions(+)
+ create mode 100644 labs/02/Makefile
+ create mode 100644 labs/02/my_compiler.c
+
+diff --git a/labs/02/Makefile b/labs/02/Makefile
+new file mode 100644
+index 0000000..c511a59
+--- /dev/null
++++ b/labs/02/Makefile
+@@ -0,0 +1,10 @@
++build:
++	gcc my_compiler.c -o my_compiler
++
++
++run:
++	./my_compiler hello.c
++
++	
++clean:
++	rm -rf my_compiler
+\ No newline at end of file
+diff --git a/labs/02/my_compiler.c b/labs/02/my_compiler.c
+new file mode 100644
+index 0000000..6c73c4a
+--- /dev/null
++++ b/labs/02/my_compiler.c
+@@ -0,0 +1,291 @@
++#include <stdio.h>
++#include <stdlib.h>
++#include <stdbool.h>
++char *checkSign;
++int lnNum;
++FILE *f;
++char *file;
++char ch;
++int ignore;
++
++struct Node
++{
++    char data;
++    int line;
++    struct Node *next;
++    struct Node *prev;
++};
++
++void printErrorsLeft(struct Node *n)
++{
++    while (n != NULL)
++    {
++        switch (n->data)
++        {
++        case ((char)0):
++            /* code */
++            break;
++
++        default:
++            printf("There is a missing %c in line: %d\n", n->data, n->line);
++
++            break;
++        }
++
++        n = n->next;
++    }
++}
++
++int main(int argc, char *argv[])
++{
++
++    struct Node *head = NULL;
++    head = (struct Node *)malloc(sizeof(struct Node));
++    struct Node *current = head;
++    current->data = (char)0;
++    current->prev = NULL;
++    current->next = NULL;
++    lnNum = 1;
++    ignore = 0;
++    if (argc < 2)
++    {
++        printf("Missing file\n");
++        return (1);
++    }
++    else
++    {
++        file = argv[1];
++    }
++
++    f = fopen(file, "r");
++    if (f)
++    {
++
++        while ((ch = fgetc(f)) != EOF)
++        {
++
++            switch (ch)
++            {
++            case '(':
++
++                if (ignore == 0)
++                {
++                    if ((current) == NULL)
++                    {
++                        current = (struct Node *)malloc(sizeof(struct Node));
++                        current->data = ch;
++                        current->line = lnNum;
++                        current->next = NULL;
++                    }
++                    else
++                    {
++                        current->next = (struct Node *)malloc(sizeof(struct Node));
++                        current->next->prev = current;
++                        current = current->next;
++                        current->data = ch;
++                        current->line = lnNum;
++                        current->next = NULL;
++                    }
++                }
++
++                break;
++            case ')':
++
++                if (ignore == 0)
++                {
++                    if (current != NULL)
++                    {
++
++                        char sign = current->data;
++
++                        switch (sign)
++                        {
++                        case '(':
++                            current = current->prev;
++                            current->next = NULL;
++
++                            break;
++
++                        default:
++                            printf("There is a missing ( in line: %d\n", lnNum - 1);
++
++                            break;
++                        }
++                    }
++                }
++                break;
++            case '{':
++
++                if (ignore == 0)
++                {
++                    if ((current) == NULL)
++                    {
++                        current = (struct Node *)malloc(sizeof(struct Node));
++                        current->data = ch;
++                        current->line = lnNum;
++                        current->next = NULL;
++                    }
++                    else
++                    {
++                        current->next = (struct Node *)malloc(sizeof(struct Node));
++                        current->next->prev = current;
++                        current = current->next;
++                        current->data = ch;
++                        current->line = lnNum;
++                        current->next = NULL;
++                    }
++                }
++
++                break;
++            case '}':
++
++                if (ignore == 0)
++                {
++                    if (current != NULL)
++                    {
++
++                        char sign = current->data;
++
++                        switch (sign)
++                        {
++                        case '{':
++                            current = current->prev;
++                            current->next = NULL;
++
++                            break;
++
++                        default:
++                            printf("There is a missing { in line: %d\n", lnNum - 1);
++
++                            break;
++                        }
++                    }
++                }
++                break;
++            case '[':
++                if (ignore == 0)
++                {
++                    if ((current) == NULL)
++                    {
++                        current = (struct Node *)malloc(sizeof(struct Node));
++                        current->data = ch;
++                        current->line = lnNum;
++                        current->next = NULL;
++                    }
++                    else
++                    {
++                        current->next = (struct Node *)malloc(sizeof(struct Node));
++                        current->next->prev = current;
++                        current = current->next;
++                        current->data = ch;
++                        current->line = lnNum;
++                        current->next = NULL;
++                    }
++                }
++
++                break;
++
++            case ']':
++
++                if (ignore == 0)
++                {
++                    if (current != NULL)
++                    {
++
++                        char sign = current->data;
++                        switch (sign)
++                        {
++                        case '[':
++                            current = current->prev;
++                            current->next = NULL;
++                            break;
++
++                        default:
++                            printf("There is a missing [ in line: %d\n", lnNum - 1);
++
++                            break;
++                        }
++                    }
++                }
++                break;
++            case '\'':
++
++                if (ignore == 0)
++                {
++                    if (current->data == '\'')
++                    {
++
++                        current = current->prev;
++                        current->next = NULL;
++                    }
++                    else
++                    {
++
++                        current->next = (struct Node *)malloc(sizeof(struct Node));
++                        current->next->prev = current;
++                        current = current->next;
++                        current->data = ch;
++                        current->line = lnNum;
++                        current->next = NULL;
++                    }
++                }
++
++                break;
++            case '\"':
++
++                if (ignore == 0)
++                {
++                    if (current->data == '\"')
++                    {
++
++                        current = current->prev;
++                        current->next = NULL;
++                    }
++                    else
++                    {
++
++                        current->next = (struct Node *)malloc(sizeof(struct Node));
++                        current->next->prev = current;
++                        current = current->next;
++                        current->data = ch;
++                        current->line = lnNum;
++                        current->next = NULL;
++                    }
++                }
++
++                break;
++            case '/':
++                switch (ch = fgetc(f))
++                {
++                case ('/'):
++
++                    ignore = 1;
++                    break;
++
++                default:
++                    break;
++                }
++                lnNum++;
++
++                break;
++
++            case '\n':
++                lnNum++;
++                ignore = 0;
++                break;
++
++            default:
++
++                break;
++            }
++        }
++        printErrorsLeft(head);
++    }
++
++    else
++    {
++        printf("Failed to open the file\n");
++    }
++
++    return (0);
++}
+-- 
+2.25.1
+
